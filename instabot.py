@@ -1,17 +1,18 @@
 #Importing requests and urlib packages.
 import requests , urllib
 
-#Importing textblob.
+#Importing textblob - to analyze the sentiments of the comments.
 from textblob import TextBlob
 from textblob.sentiments import NaiveBayesAnalyzer
 
-#importing wordcloud library
+#importing wordcloud library - to generate a wordcloud of user's interests.
 from wordcloud import WordCloud, STOPWORDS
 
+#importing matplot library - to plot the interests
 import matplotlib.pyplot as plt
 
-
-#Hashtag_list = ['OOTD' , 'LifeIsGood' , 'NightLife' , 'FoodPorn']
+#Defining a list where the hashtags of the user will be stored.
+Hashtag_list = []
 
 
 #This is the access token for accessing the instagram API
@@ -28,8 +29,8 @@ BASE_URL = 'https://api.instagram.com/v1/'
 
 
 
-
-#Function that retrives the value of your own instagram account - followers, list of following, number of posts, etc.
+#Working
+# 1. Function that retrives the value of your own instagram account - followers, list of following, number of posts, etc.
 
 def my_info():
   request_url = (BASE_URL + 'users/self/?access_token=%s') % (APP_ACCESS_TOKEN)
@@ -54,11 +55,10 @@ def my_info():
 
 
 
+#Working
+# Function declaration to get the id of the user.
 
-
-#Function declaration to get the id of the user.
-
-def get_user_id(insta_username):
+def fetch_user_id(insta_username):
     request_url = (BASE_URL + 'users/search?q=%s&access_token=%s') % (insta_username, APP_ACCESS_TOKEN)
     print 'GET request url : %s' % (request_url)
     user_info = requests.get(request_url).json()
@@ -79,10 +79,10 @@ def get_user_id(insta_username):
 
 
 
-#Function declaration to get the info of a user by username
+# 2. Function declaration to get the info of a user by username
 
-def get_user_info(insta_username):
-    user_id = get_user_id(insta_username)
+def fetch_user_info(insta_username):
+    user_id = fetch_user_id(insta_username)
     if user_id == None:
         print 'User does not exist!'
         exit()
@@ -109,9 +109,9 @@ def get_user_info(insta_username):
 
 
 
-#Function declaration to get the recent post of your own account.
+# 3. Function declaration to get any post of your own account.(range 0-19)
 
-def get_own_post():
+def fetch_your_own_post():
     request_url = (BASE_URL + 'users/self/media/recent/?access_token=%s') % (APP_ACCESS_TOKEN)
     print 'GET request url : %s' % (request_url)
     own_media = requests.get(request_url).json()
@@ -119,8 +119,10 @@ def get_own_post():
     if own_media['meta']['code'] == 200:
 
         if len(own_media['data']):
-            image_name = own_media['data'][0]['id'] + '.jpeg'
-            image_url = own_media['data'][0]['images']['standard_resolution']['url']
+
+            own_post_number = int(raw_input("Enter the image number you would like to download."))
+            image_name = own_media['data'][own_post_number]['id'] + '.jpeg'
+            image_url = own_media['data'][own_post_number]['images']['standard_resolution']['url']
             urllib.urlretrieve(image_url, image_name)
             print 'Your image has been downloaded!'
         else:
@@ -134,10 +136,11 @@ def get_own_post():
 
 
 
-#Function declaration to get the recent post of another user
+# 4. Function declaration to get the any post of another user(Index range from 0-19)
 
-def get_user_post(insta_username):
-    user_id = get_user_id(insta_username)
+
+def fetch_user_post(insta_username):
+    user_id = fetch_user_id(insta_username)
     if user_id == None:
         print 'User does not exist!'
         exit()
@@ -149,13 +152,33 @@ def get_user_post(insta_username):
     if user_media['meta']['code'] == 200:
 
         if len(user_media['data']):
-            image_name = user_media['data'][0]['id'] + '.jpeg'
-            image_url = user_media['data'][0]['images']['standard_resolution']['url']
+
+            post_number = int(raw_input("Enter the post number you would like to download")) #Please Note: if entered '20', index out of range error is shown.
+            image_name = user_media['data'][post_number]['id'] + '.jpeg'
+            image_url = user_media['data'][post_number]['images']['standard_resolution']['url']
             urllib.urlretrieve(image_url, image_name)
+
             print 'Your image has been downloaded!'
         else:
             print 'Post does not exist!'
 
+    else:
+        print 'Status code other than 200 received!'
+
+
+
+# Function to retrieve own post id
+
+def fetch_own_post_id():
+    request_url = (BASE_URL + 'users/self/media/recent/?access_token=%s') % (APP_ACCESS_TOKEN)
+    print 'GET request url : %s' % (request_url)
+    own_media = requests.get(request_url).json()
+
+    if own_media['meta']['code'] == 200:
+        if len(own_media['data']):
+            return own_media['data'][0]['id']
+        else:
+            print 'Post does not exist!'
     else:
         print 'Status code other than 200 received!'
 
@@ -167,7 +190,7 @@ def get_user_post(insta_username):
 #Function declaration to get the post id of another user's recent post.
 
 def get_post_id(insta_username):
-    user_id = get_user_id(insta_username)
+    user_id = fetch_user_id(insta_username)
     if user_id == None:
         print 'User does not exist!'
         exit()
@@ -192,8 +215,8 @@ def get_post_id(insta_username):
 
 
 
-
-#Function declarartion to post a like on the user's media.
+#Working
+# 6. Function declarartion to post a like on the user's media.
 
 def like_a_post(insta_username):
     media_id = get_post_id(insta_username)
@@ -205,14 +228,14 @@ def like_a_post(insta_username):
     if post_a_like['meta']['code'] == 200:
         print 'Like was successful!'
     else:
-        print 'Your like was unsuccessful. Try again!'
+        print 'Your like was unsuccessful. Please try again!'
 
 
 
 
 
-
-#Function declaration to post a comment on a user's media
+#Working
+# 8. Function declaration to post a comment on a user's media
 
 def post_a_comment(insta_username):
     media_id = get_post_id(insta_username)
@@ -225,18 +248,7 @@ def post_a_comment(insta_username):
     if make_comment['meta']['code'] == 200:
         print "Successfully added a new comment!"
     else:
-        print "Unable to add comment. Try again!"
-
-
-
-
-
-
-# Function to delete a comment.
-
-def delete_comments(insta_username):
-    media_id = get_post_id(insta_username)
-    comment_id = get_comment_id(insta_username)
+        print "Unable to add comment. Please try again!"
 
 
 
@@ -244,7 +256,8 @@ def delete_comments(insta_username):
 
 
 
-# Function declaration to delete negative comments from a user's post.
+#Working
+# 9. Function declaration to delete negative comments from a user's post.
 
 def delete_negative_comments(insta_username):
   media_id = get_post_id(insta_username)
@@ -256,7 +269,7 @@ def delete_negative_comments(insta_username):
 
     if len(comment_info['data']):
 
-        for x in range(0, len(comment_info['data'])):
+        for x in range(len(comment_info['data'])):
             comment_id = comment_info['data'][x]['id']
             comment_text = comment_info['data'][x]['text']
             blob = TextBlob(comment_text, analyzer=NaiveBayesAnalyzer())
@@ -269,7 +282,7 @@ def delete_negative_comments(insta_username):
                 print 'DELETE request url : %s' % (delete_url)
                 delete_info = requests.delete(delete_url).json()
 
-                if delete_info['meta']['code']== 200:
+                if delete_info['meta']['code'] == 200:
                     print 'Comment successfully deleted!\n'
                 else:
                     print 'Unable to delete comment!'
@@ -287,10 +300,10 @@ def delete_negative_comments(insta_username):
 
 
 
+#Working
+# 5. Function declaration to get a list of the likers for a particular post.
 
-#Function declaration to get a list of the likers for a particular post.
-
-def get_like_list(insta_username):
+def fetch_like_list(insta_username):
     media_id = get_post_id(insta_username)
     request_url = (BASE_URL + 'media/%s/likes?access_token= %s') % (media_id, APP_ACCESS_TOKEN)
     print 'GET request url : %s' % (request_url)
@@ -299,7 +312,7 @@ def get_like_list(insta_username):
     if list_of_likes_info ['meta']['code'] == 200:
 
         if len(list_of_likes_info['data']):
-            for x in range(0, len(list_of_likes_info['data'])):
+            for x in range(len(list_of_likes_info['data'])):
                 print 'list of likes is %s' % (list_of_likes_info['data'][x]['username'])
         else:
             print 'likes does not exist.'
@@ -313,25 +326,53 @@ def get_like_list(insta_username):
 
 
 
+#Working
+# 7. Function declaration to get the comment list from the user's post.
 
-#Function declaration to get the comment list from the user's post.
-
-def get_comment_list(insta_username):
+def get_comments_list(insta_username):
     media_id = get_post_id(insta_username)
-    request_url = (BASE_URL + 'media/%s/comments?access_token = %s') % (media_id, APP_ACCESS_TOKEN)
-    print 'GET request url : %s' % (request_url)
-    list_of_comments_info = requests.get(request_url).json()
-
-    if list_of_comments_info['meta']['code'] == 200:
-
-        if len(list_of_comments_info['data']):
-            for x in range(0, len(list_of_comments_info['data'])):
-                print 'list of comments is %s' % (['data'][x]['text'])
-        else:
-            print 'comments does not exist.'
-
+    if media_id is None:
+        print "There is no media"
     else:
-        print 'status code other than 200 received.'
+        request_url = BASE_URL + "media/%s/comments/?access_token=%s" % (media_id, APP_ACCESS_TOKEN)
+        print "Get request url:%s" % request_url
+        comment_list = requests.get(request_url).json()
+
+     #check the status code, if comes 200 then show the list of comments
+    if comment_list['meta']['code'] == 200:
+        if len(comment_list['data']):
+            print "The comments on the post :"
+            for x in range(len(comment_list['data'])):
+                comment_text= comment_list['data'][x]['text']
+                print "comment: %s" % (comment_text)
+
+        else:
+            print "No comments on this post"
+    else:
+        print "Status code other than 200"
+
+
+
+
+#Working.
+# 11. Function to get information of your own comment
+
+def own_comment_info():
+    media_id = fetch_own_post_id()
+    request_url = (BASE_URL + 'media/%s/comments/?access_token=%s') % (media_id, APP_ACCESS_TOKEN)
+    print 'GET request url : %s' % (request_url)
+    comment_info = requests.get(request_url).json()
+    if comment_info['meta']['code'] == 200:
+        if len(comment_info):
+            x = 0
+            for x in range(len(comment_info["data"])):
+                print "%s commented : %s" % (["data"][x]["from"]["username"],["data"][x]["text"])
+                x = x + 1
+                print x
+        else:
+            print "No comments have been made."
+    else:
+        print"Status codde other than 200 received."
 
 
 
@@ -341,7 +382,7 @@ def get_comment_list(insta_username):
 # Function to get the list of hashtags of all the posts of a user
 
 # def hashtag_analysis(insta_username):
-#     user_id = get_user_id(insta_username)
+#     user_id = fetch_user_id(insta_username)
 #
 #     if user_id == None:
 #         print 'User does not exist'
@@ -384,7 +425,8 @@ def start_bot():
         print "8.Make a comment on the recent post of a user\n"
         print "9.Delete negative comments from the recent post of a user\n"
         print "10.Plot your friend's interests."
-        print "11.Exit"
+        print "11.Get your own commednt info"
+        print "12.Exit the instabot."
 
         choice=raw_input("Enter you choice: ")
 
@@ -395,18 +437,18 @@ def start_bot():
 
         elif choice == "2" :
             insta_username = raw_input("Enter the username of the user: ")
-            get_user_info(insta_username)
+            fetch_user_info(insta_username)
 
         elif choice == "3" :
-           get_own_post()
+           fetch_your_own_post()
 
         elif choice == "4" :
             insta_username = raw_input("Enter the username of the user: ")
-            get_user_post(insta_username)
+            fetch_user_post(insta_username)
 
         elif choice == "5":
            insta_username = raw_input("Enter the username of the user: ")
-           get_like_list(insta_username)
+           fetch_like_list(insta_username)
 
         elif choice == "6" :
            insta_username = raw_input("Enter the username of the user: ")
@@ -414,7 +456,7 @@ def start_bot():
 
         elif choice == "7" :
            insta_username = raw_input("Enter the username of the user: ")
-           get_comment_list(insta_username)
+           get_comments_list(insta_username)
 
         elif choice == "8" :
            insta_username = raw_input("Enter the username of the user: ")
@@ -428,7 +470,11 @@ def start_bot():
         #     insta_username = raw_input("Enter the name of the user:")
         #     hashtag_analysis(insta_username)
 
-        elif choice == "11" :
+        elif choice == '11':
+            own_comment_info()
+
+        elif choice == "12" :
+
             exit()
 
         else:
