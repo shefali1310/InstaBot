@@ -355,10 +355,63 @@ def delete_negative_comments(insta_username):
 
 
 
+
+# 10. Function to get the list of hashtags of all the posts of a user.
+
+def hashtag_analysis(insta_username):
+
+    # Defining a list where the hashtags of the user will be stored.
+    Hashtag_list = []
+
+    user_id = fetch_user_id(insta_username)
+    if user_id == None:
+        print colored("No user found.", 'red')
+
+    request_url = (BASE_URL + 'users/%s/media/recent/?access_token=%s') % (user_id, APP_ACCESS_TOKEN)
+    print 'Get request url: %s' % (request_url)
+    user_media = requests.get(request_url).json()
+
+    if user_media['meta']['code'] == 200:
+        if len(user_media):
+            for x in range(len(user_media['data'])):
+                hashtags = user_media['data'][x]['tags']
+                print hashtags
+                Hashtag_list.append(hashtags)
+                str1 = str(Hashtag_list)
+
+                generate_wordcloud(str1)
+
+
+
+
+        else:
+            print colored("Media doesn't exist", 'red')
+    else:
+        print colored("Status code other than 200 received.", 'red')
+
+
+
+# Function to generate a wordcloud of the hashtags retrieved.
+
+def generate_wordcloud(str1):
+
+    wordcloud = WordCloud(stopwords=STOPWORDS, background_color='black',
+                        width=1200, height=1000).generate(str1)
+
+    plt.imshow(wordcloud)
+    plt.axis('off')
+    plt.savefig('wordcloud.png')
+    plt.show()
+
+
+
+
+
 #Working.
 # 11. Function to get information of your own comment
 
 def own_comment_info():
+
     media_id = fetch_own_post_id()
     request_url = (BASE_URL + 'media/%s/comments/?access_token=%s') % (media_id, APP_ACCESS_TOKEN)
     print 'GET request url : %s' % (request_url)
@@ -378,52 +431,29 @@ def own_comment_info():
 
 
 
+# Function to get the recent media liked by the user.
 
+def recently_liked():
 
-# Function to get the list of hashtags of all the posts of a user.
+    request_url = (BASE_URL + 'users/self/media/liked?access_token=%s') % (  APP_ACCESS_TOKEN)
+    print 'GET request url : %s' % (request_url)
+    recent_liked_media = requests.get(request_url).json()
 
-def hashtag_analysis(insta_username):
-
-    # Defining a list where the hashtags of the user will be stored.
-    Hashtag_list = []
-
-    user_id = fetch_user_id(insta_username)
-    if user_id == None:
-        print colored("No user found.",'red')
-
-    request_url = (BASE_URL + 'users/%s/media/recent/?access_token=%s') % (user_id, APP_ACCESS_TOKEN)
-    print 'Get request url: %s' % (request_url)
-    user_media = requests.get(request_url).json()
-
-    if user_media['meta']['code']== 200:
-        if len(user_media):
-            for x in range(len(user_media['data'])):
-                hashtags = user_media['data'][x]['tags']
-                print hashtags
-                Hashtag_list.append(hashtags)
-                str1 = str(Hashtag_list)
-
-
-                generate_wordcloud(str1)
-
-
-
-
+    if recent_liked_media['meta']['code'] == 200 :
+        if len(recent_liked_media):
+            image_name = recent_liked_media['data'][0]['id'] + '.jpeg'
+            image_url = recent_liked_media['data'][0]['images']['standard_resolution']['url']
+            urllib.urlretrieve(image_url, image_name)
+            print colored('Your image has been downloaded','green')
         else:
-            print colored("Media doesn't exist",'red')
+            print colored('No media found.','red')
     else:
-        print colored("Status code other than 200 received.",'red')
+        print colored('Status code other than 200 received.','red')
 
 
-def generate_wordcloud(str1):
 
-    wordcloud = WordCloud(stopwords=STOPWORDS, background_color='black',
-                          width=1200, height=1000).generate(str1)
 
-    plt.imshow(wordcloud)
-    plt.axis('off')
-    plt.savefig('wordcloud.png')
-    plt.show()
+
 
 
 
@@ -448,7 +478,8 @@ def start_bot():
         print "9.Delete negative comments from the recent post of a user\n"
         print "10.Plot your friend's interests.\n"
         print "11.Get your own commednt info.\n"
-        print "12.Exit the instabot.\n"
+        print "12.Get the rdecent media liked by you.\n"
+        print "13.Exit the instabot.\n"
 
         choice=raw_input("Enter you choice: ")
 
@@ -497,6 +528,9 @@ def start_bot():
 
         elif choice == "12" :
 
+            recently_liked()
+
+        elif choice == '13':
             exit()
 
         else:
