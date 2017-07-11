@@ -1,10 +1,11 @@
+# IMPORTING LIBRARIES
+
 #Importing requests and urlib packages.
 import requests , urllib
 
-#Importing termcolor
+#Importing termcolor - to display a colored output.
 from termcolor import colored
 
-import re
 #Importing textblob - to analyze the sentiments of the comments.
 from textblob import TextBlob
 from textblob.sentiments import NaiveBayesAnalyzer
@@ -17,6 +18,8 @@ import matplotlib.pyplot as plt
 
 
 
+
+
 #This is the access token for accessing the instagram API
 APP_ACCESS_TOKEN = '286308105.a90ec70.7691dca881004b60b57db1cc85505c1e'
 
@@ -25,7 +28,6 @@ APP_ACCESS_TOKEN = '286308105.a90ec70.7691dca881004b60b57db1cc85505c1e'
 
 #This is the base URL for the instagram API.
 BASE_URL = 'https://api.instagram.com/v1/'
-
 
 
 
@@ -80,7 +82,6 @@ def fetch_user_id(insta_username):
 
 
 
-
 # 2. Function declaration to get the info of a user by username
 
 def fetch_user_info(insta_username):
@@ -110,7 +111,6 @@ def fetch_user_info(insta_username):
 
 
 
-
 # 3. Function declaration to get any post of your own account.(range 0-19)
 
 def fetch_your_own_post():
@@ -132,7 +132,6 @@ def fetch_your_own_post():
 
     else:
         print colored('Status code other than 200 received!','red')
-
 
 
 
@@ -169,6 +168,8 @@ def fetch_user_post(insta_username):
 
 
 
+
+
 # Function to retrieve own post id
 
 def fetch_own_post_id():
@@ -183,7 +184,6 @@ def fetch_own_post_id():
             print colored('Post does not exist!','red')
     else:
         print colored('Status code other than 200 received!','red')
-
 
 
 
@@ -217,8 +217,6 @@ def get_post_id(insta_username):
 
 
 
-
-
 # Working
 # 5. Function declaration to get a list of the likers for a particular post.
 
@@ -243,8 +241,6 @@ def fetch_like_list(insta_username):
 
 
 
-
-
 #Working
 # 6. Function declarartion to post a like on the user's media.
 
@@ -259,6 +255,10 @@ def like_a_post(insta_username):
         print colored('Like was successful!','green')
     else:
         print colored('Your like was unsuccessful. Please try again!','red')
+
+
+
+
 
 # Working
 # 7. Function declaration to get the comment list from the user's post.
@@ -286,6 +286,9 @@ def get_comments_list(insta_username):
         print colored("Status code other than 200", 'red')
 
 
+
+
+
 #Working
 # 8. Function declaration to post a comment on a user's media
 
@@ -301,8 +304,6 @@ def post_a_comment(insta_username):
         print colored('Successfully added a new comment!','green')
     else:
         print colored('Unable to add comment. Please try again!','red')
-
-
 
 
 
@@ -352,10 +353,6 @@ def delete_negative_comments(insta_username):
 
 
 
-
-
-
-
 # 10. Function to get the list of hashtags of all the posts of a user.
 
 def hashtag_analysis(insta_username):
@@ -374,15 +371,19 @@ def hashtag_analysis(insta_username):
     if user_media['meta']['code'] == 200:
         if len(user_media):
             for x in range(len(user_media['data'])):
-                hashtags = user_media['data'][x]['tags']
-                print hashtags
-                Hashtag_list.append(hashtags)
-                str1 = str(Hashtag_list)
+                for hashtags in (user_media['data'][x]['tags']):
 
-                generate_wordcloud(str1)
+                    Hashtag_list.append(hashtags)
 
 
 
+            # Creating a string that would hold the values of the Hashtag_list.
+            str = " "
+
+            # Now the .join() method will be used to return a string in which the elements of Hashtag_list would be joined to 'str'
+
+            str = str.join(Hashtag_list)
+            generate_wordcloud(str)
 
         else:
             print colored("Media doesn't exist", 'red')
@@ -391,14 +392,16 @@ def hashtag_analysis(insta_username):
 
 
 
+
+
 # Function to generate a wordcloud of the hashtags retrieved.
 
-def generate_wordcloud(str1):
+def generate_wordcloud(str):
 
     wordcloud = WordCloud(stopwords=STOPWORDS, background_color='black',
-                        width=1200, height=1000).generate(str1)
+                        width=1200, height=1000).generate(str)
 
-    plt.imshow(wordcloud)
+    plt.imshow(wordcloud, interpolation="bilinear")
     plt.axis('off')
     plt.savefig('wordcloud.png')
     plt.show()
@@ -435,7 +438,7 @@ def own_comment_info():
 
 def recently_liked():
 
-    request_url = (BASE_URL + 'users/self/media/liked?access_token=%s') % (  APP_ACCESS_TOKEN)
+    request_url = (BASE_URL + 'users/self/media/liked?access_token=%s') % (APP_ACCESS_TOKEN)
     print 'GET request url : %s' % (request_url)
     recent_liked_media = requests.get(request_url).json()
 
@@ -449,11 +452,6 @@ def recently_liked():
             print colored('No media found.','red')
     else:
         print colored('Status code other than 200 received.','red')
-
-
-
-
-
 
 
 
