@@ -16,6 +16,15 @@ from wordcloud import WordCloud, STOPWORDS
 #importing matplot library - to plot the interests
 import matplotlib.pyplot as plt
 
+#importing the paralleldots api-key
+from paralleldots import set_api_key, get_api_key, sentiment
+
+
+set_api_key('1I4xTjI50WTBqxFDGiY8QxB3tZdH9v3IejZI7PSrqRk')
+get_api_key()
+Pos_sentiments = 0
+neg_sentiments = 0
+neut_sentiments = 0
 
 
 
@@ -341,7 +350,7 @@ def delete_negative_comments(insta_username):
                     print colored('Unable to delete comment!','red')
 
             else:
-                print colored('Positive comment: %s\n','red') % (comment_info)
+                print colored('Positive comment: %s\n','red') % (comment_text)
 
     else:
         print colored('There are no comments on this post.','red')
@@ -434,7 +443,7 @@ def own_comment_info():
 
 
 
-# Function to get the recent media liked by the user.
+# 12. Function to get the recent media liked by the user.
 
 def recently_liked():
 
@@ -452,6 +461,48 @@ def recently_liked():
             print colored('No media found.','red')
     else:
         print colored('Status code other than 200 received.','red')
+
+
+
+
+
+# 13. Function declaration to perform sentiment analysis
+
+def pie_chart(insta_username):
+
+    give_comments = get_comments_list(insta_username)
+
+    for i in give_comments:
+        sentiments = sentiment(str(i))
+        print sentiments["sentiment"]
+
+        if sentiments["sentiment"] > 0.75 :
+            print "Positive sentments"
+            global pos_sentiments
+            pos_sentiments = pos_sentiments + 1
+
+        elif sentiments["sentiments"] > 0.25 and sentiments["sentiments"] < 0.75 :
+            print "Neutral sentments"
+            global neut_sentiments
+            neut_sentiments = neut_sentiments + 1
+
+        else :
+            print "Negative sentiments"
+            global neg_sentiments
+            neg_sentiments = neg_sentiments + 1
+
+    labels = 'Positive Sentiments', 'Neutral Sentiments', 'Negative Sentiments'
+    sizes = [pos_sentiments, neut_sentiments, neg_sentiments]
+    explode = (0.1, 0.1, 0.1)
+
+    fig1, ax1 = plt.subplots()
+    ax1.pie(sizes, explode=explode, labels=labels, autopct='%1.1f%%',
+            shadow=True, startangle=90)
+    ax1.axis('equal')
+    plt.show()
+
+
+
 
 
 
@@ -477,7 +528,8 @@ def start_bot():
         print "10.Plot your friend's interests.\n"
         print "11.Get your own commednt info.\n"
         print "12.Get the rdecent media liked by you.\n"
-        print "13.Exit the instabot.\n"
+        print "13. Sentiment Analysis.\n"
+        print "14.Exit the instabot.\n"
 
         choice=raw_input("Enter you choice: ")
 
@@ -528,7 +580,12 @@ def start_bot():
 
             recently_liked()
 
-        elif choice == '13':
+        elif choice == "13" :
+            insta_username = raw_input("Enter the username:")
+            pie_chart()
+
+
+        elif choice == '14':
             exit()
 
         else:
